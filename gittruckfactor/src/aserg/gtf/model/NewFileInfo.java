@@ -9,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import aserg.gtf.Significance.FileSignificance;
 import org.eclipse.persistence.annotations.Index;
 
 @Entity
@@ -38,8 +39,7 @@ public class NewFileInfo extends AbstractEntity{
 
 	private String module = "NONE";
 
-	
-	
+
 	@Index(name="NEWFILEREPOSITORYNAMEINDEX")
 	private String repositoryName;
 	

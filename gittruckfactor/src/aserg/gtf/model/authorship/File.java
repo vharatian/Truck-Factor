@@ -1,5 +1,7 @@
 package aserg.gtf.model.authorship;
 
+import aserg.gtf.Significance.FileSignificance;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +24,9 @@ public class File {
 	private int nChanges=0;
 	private int nExtraAdds=0;
 
+	@OneToOne
+	private FileSignificance significance;
+
 	@OneToMany(cascade = { CascadeType.ALL })
 	private List<AuthorshipInfo> authorshipInfos = new ArrayList<AuthorshipInfo>();
 
@@ -43,7 +48,12 @@ public class File {
 		super();
 		this.path = path;
 	}
-	
+
+	public File(String path, FileSignificance significance) {
+		this(path);
+		this.significance = significance;
+	}
+
 	public int getnChanges() {
 		return nChanges;
 	}
@@ -189,5 +199,12 @@ public class File {
 		this.bestDoaAddDeliveries = bestDoaAddDeliveries;
 	}
 
-	
+
+	public void setSignificance(FileSignificance significance) {
+		this.significance = significance;
+	}
+
+	public FileSignificance getSignificance() {
+		return significance;
+	}
 }
