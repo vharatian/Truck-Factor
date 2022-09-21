@@ -28,29 +28,44 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 	public PrunedGreedyTruckFactor(float minPercentage) {
 		this.minPercentage = minPercentage; 
 	}
-	
+
 	@Override
-	public TFInfo getTruckFactor(Repository repository) {
+	public TFInfo getTruckFactor(Repository repository, int significanceIndex) {
 		Map<Developer, Set<File>> authorsMap = getFilesAuthorMap(repository);
-		//GREDDY TRUCK FACTOR ALGORITHM		
-		int repFilesSize = repository.getFiles().size();
+		//GREDDY TRUCK FACTOR ALGORITHM
+
+		double totalSignificance = GetTotalSignificance(repository, significanceIndex);
 		int factor = 0;
 		float coverage = 1;
 		int nFilesTop1Dev = getNumFilesTopDev(authorsMap);
 		while(authorsMap.size()>0){
-			coverage = getCoverage(repFilesSize, authorsMap);
+			coverage = getCoverage(totalSignificance, authorsMap, significanceIndex);
 			if (coverage<0.5)
 				break;			
-			removeTopAuthor(repFilesSize, authorsMap);
+			removeTopAuthor(authorsMap);
 			factor++;
 		}
-		tfInfo.setCoverage(getCoverage(repFilesSize, authorsMap));
+		tfInfo.setCoverage(getCoverage(totalSignificance, authorsMap, significanceIndex));
 		tfInfo.setTf(factor);
-		tfInfo.setTotalFiles(repFilesSize);
+		tfInfo.setTotalFiles(repository.getFiles().size());
 		
 		return pruneTF(tfInfo);
 	}
-	
+
+	private double GetTotalSignificance(Repository repository, int significanceIndex) {
+		double sum = 0;
+		for (File file: repository.getFiles())
+		{
+			FileSignificance significance = file.getSignificance();
+			// Null significance means the file is not important
+			if (significance != null) {
+				sum += significance.indicators[significanceIndex].indicator;
+			}
+		}
+
+		return sum;
+	}
+
 	private TFInfo pruneTF(TFInfo tfInfo) {
 		Developer topDev = getTopOneDev(tfInfo.getTfDevelopers());
 		List<Developer> prunedDevs = new ArrayList<Developer>();
@@ -102,25 +117,27 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 		return map;
 	}
 
-	private float getCoverage(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
-//		Set<File> authorsSet = new HashSet<File>();
+	private float getCoverage(double totalSignificance, Map<Developer, Set<File>> authorsMap, int significanceIndex) {
+		Set<File> authorsSet = new HashSet<File>();
 		double significanceSum = 0;
 		for (Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
 			for (File file : entry.getValue()) {
-//				authorsSet.add(file);
-//				if(authorsSet.size()==repFilesSize)
-//					return 1f;
-
-				FileSignificance significance = file.getSignificance();
-				if (significance != null){
-					significanceSum += significance.indicators[0].indicator;
+				if (!authorsSet.contains(file))
+				{
+					authorsSet.add(file);
+					
+					FileSignificance significance = file.getSignificance();
+					// null significance means the file is not important at all
+					if (significance != null){
+						significanceSum += significance.indicators[significanceIndex].indicator;
+					}
 				}
 			}
 		}
-		return (float) significanceSum;
+		return (float) (significanceSum / totalSignificance);
 	}
 
-	private void removeTopAuthor(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
+	private void removeTopAuthor(Map<Developer, Set<File>> authorsMap) {
 		int biggerNumber = 0;
 		Developer biggerDev = null;
 		for (Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {

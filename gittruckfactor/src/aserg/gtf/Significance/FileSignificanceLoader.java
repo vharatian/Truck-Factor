@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FileSignificanceLoader {
+    public static final String INDICATOR_EQUAL = "Equal";
     private final String significanceFilePath;
 
     public FileSignificanceLoader(String significanceFilePath) {
@@ -32,25 +33,30 @@ public class FileSignificanceLoader {
             for (CSVRecord record : records) {
                 if (header){
 
-                    indicatorNames = new String[record.size() - 1];
+                    indicatorNames = new String[record.size()];
                     for (int i=1; i<record.size(); i++){
                         indicatorNames[i-1] = record.get(i);
                     }
 
+                    // The last indicator should be equal weight which represents the regular algorithm
+                    indicatorNames[indicatorNames.length - 1] = INDICATOR_EQUAL;
                     header = false;
 
                 }else{
-                    SignificanceIndicator[] indicators = new SignificanceIndicator[record.size() - 1];
+                    SignificanceIndicator[] indicators = new SignificanceIndicator[record.size()];
                     for (int i=1; i<record.size(); i++){
                         indicators[i-1] = new SignificanceIndicator(indicatorNames[i-1], Double.parseDouble(record.get(i)));
                     }
+
+                    // Add an equal weight to all the files
+                    indicators[indicators.length - 1] = new SignificanceIndicator(INDICATOR_EQUAL, 1);
 
                     String path = record.get(0);
                     files.put(path, new FileSignificance(path, indicators));
                 }
             }
 
-            return new SignificanceInfo(files, null);
+            return new SignificanceInfo(files, indicatorNames);
         }catch (IOException e){
             e.printStackTrace();
             return null;
@@ -64,6 +70,8 @@ public class FileSignificanceLoader {
             FileSignificance significance = info.files.getOrDefault(file.getPath(), null);
             file.setSignificance(significance);
         }
+
+        repo.setSignificanceIndicators(info.indicatorNames);
 
         return repo;
     }

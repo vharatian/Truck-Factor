@@ -4,16 +4,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
 
 import aserg.gtf.Significance.FileSignificanceLoader;
 import org.apache.log4j.BasicConfigurator;
@@ -99,8 +91,10 @@ public class GitTruckFactor {
 
 
         try {
-            TFInfo tf = getTFInfo(repositoryPath, repositoryName, filesInfo, modulesInfo, fileExtractor, linguistExtractor, gitLogExtractor, aliasHandler, fileSignificanceLoader);
-            System.out.println(tf);
+            List<TFInfo> tfs = getTFInfo(repositoryPath, repositoryName, filesInfo, modulesInfo, fileExtractor, linguistExtractor, gitLogExtractor, aliasHandler, fileSignificanceLoader);
+            for (TFInfo tf: tfs){
+                LOGGER.info("\n" + tf);
+            }
         } catch (Exception e) {
             LOGGER.error("TF calculation aborted!", e);
         }
@@ -109,15 +103,15 @@ public class GitTruckFactor {
         LOGGER.trace("GitTruckFactor end");
     }
 
-    private static TFInfo getTFInfo(String repositoryPath,
-                                    String repositoryName,
-                                    Map<String, List<LineInfo>> filesInfo,
-                                    Map<String, List<LineInfo>> modulesInfo,
-                                    FileInfoExtractor fileExtractor,
-                                    LinguistExtractor linguistExtractor,
-                                    GitLogExtractor gitLogExtractor,
-                                    NewAliasHandler aliasHandler,
-                                    FileSignificanceLoader fileSignificanceLoader) throws Exception {
+    private static List<TFInfo> getTFInfo(String repositoryPath,
+                                          String repositoryName,
+                                          Map<String, List<LineInfo>> filesInfo,
+                                          Map<String, List<LineInfo>> modulesInfo,
+                                          FileInfoExtractor fileExtractor,
+                                          LinguistExtractor linguistExtractor,
+                                          GitLogExtractor gitLogExtractor,
+                                          NewAliasHandler aliasHandler,
+                                          FileSignificanceLoader fileSignificanceLoader) throws Exception {
 
         Map<String, LogCommitInfo> commits = gitLogExtractor.execute();
         if (aliasHandler != null)
@@ -146,8 +140,24 @@ public class GitTruckFactor {
         //Persist authors info
         //doaCalculator.persist(repository);
 
-        TruckFactor truckFactor = new PrunedGreedyTruckFactor(config.getMinPercentage());
-        return truckFactor.getTruckFactor(repository);
+
+
+        // get TF result for all indicators
+        List<TFInfo> results = new ArrayList<>();
+        String[] significanceIndicators = repository.getSignificanceIndicators();
+        for (int i = 0; i< significanceIndicators.length; i++){
+            String significanceIndicator = significanceIndicators[i];
+            try{
+                TruckFactor truckFactor = new PrunedGreedyTruckFactor(config.getMinPercentage());
+                TFInfo info = truckFactor.getTruckFactor(repository, i);
+                info.setSignificanceIndicator(significanceIndicator);
+                results.add(info);
+            }catch (Exception e){
+                LOGGER.error("TF calculation aborted for indicator " + significanceIndicator, e);
+            }
+        }
+
+        return results;
 
     }
 

@@ -10,7 +10,8 @@ public class TFInfo {
 	private int totalFiles;
 	private float coverage;
 	private List<Developer> tfDevelopers;
-	
+	private String significanceIndicator;
+
 	public TFInfo() {
 		super();
 		this.tfDevelopers = new ArrayList<Developer>();
@@ -42,7 +43,7 @@ public class TFInfo {
 	}
 	@Override
 	public String toString() {
-		String retStr = String.format("TF = %d (coverage = %.2f%%)\n", tf, coverage*100);
+		String retStr = String.format("Significance = %s TF = %d (coverage = %.2f%%)\n", significanceIndicator, tf, coverage*100);
 		retStr += "TF authors (Developer;Files;Percentage):\n";
 		for (Developer developer : tfDevelopers) {
 			int devFiles = developer.getAuthorshipFiles().size();
@@ -70,5 +71,12 @@ public class TFInfo {
 		}
 		return retStr;
 	}
-	
+
+	public void setSignificanceIndicator(String significanceIndicator) {
+		this.significanceIndicator = significanceIndicator;
+	}
+
+	public String getSignificanceIndicator() {
+		return significanceIndicator;
+	}
 }

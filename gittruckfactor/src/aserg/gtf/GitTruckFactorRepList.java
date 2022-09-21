@@ -77,7 +77,7 @@ public class GitTruckFactorRepList {
 				
 				step = "TF";
 				TruckFactor truckFactor = new GreedyTruckFactor();
-				TFInfo tf = truckFactor.getTruckFactor(repository);
+				TFInfo tf = truckFactor.getTruckFactor(repository, 0);
 				System.out.println(repository.getFullName() + ": " + tf.getTf());
 				
 			} catch (Exception e) {
