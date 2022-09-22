@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import aserg.gtf.Significance.FileSignificanceLoader;
+import aserg.gtf.Significance.SignificanceGreedyTruckFactor;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
@@ -144,12 +145,24 @@ public class GitTruckFactor {
 
         // get TF result for all indicators
         List<TFInfo> results = new ArrayList<>();
+
+        // Add the vanilla TF evaluation result
+        try {
+            TruckFactor truckFactor = new PrunedGreedyTruckFactor(config.getMinPercentage());
+            TFInfo info = truckFactor.getTruckFactor(repository);
+            info.setSignificanceIndicator("None");
+            results.add(info);
+        } catch (Exception e) {
+            LOGGER.error("TF calculation aborted for vanilla TF Calculation", e);
+        }
+
+
         String[] significanceIndicators = repository.getSignificanceIndicators();
         for (int i = 0; i< significanceIndicators.length; i++){
             String significanceIndicator = significanceIndicators[i];
             try{
-                TruckFactor truckFactor = new PrunedGreedyTruckFactor(config.getMinPercentage());
-                TFInfo info = truckFactor.getTruckFactor(repository, i);
+                TruckFactor truckFactor = new SignificanceGreedyTruckFactor(config.getMinPercentage(), i);
+                TFInfo info = truckFactor.getTruckFactor(repository);
                 info.setSignificanceIndicator(significanceIndicator);
                 results.add(info);
             }catch (Exception e){

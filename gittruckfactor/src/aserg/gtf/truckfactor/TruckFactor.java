@@ -7,7 +7,7 @@ public abstract class TruckFactor {
 	public TruckFactor() {
 	}
 	
-	public abstract TFInfo getTruckFactor(Repository repository, int significanceIndex);
+	public abstract TFInfo getTruckFactor(Repository repository);
 	
 	
 }

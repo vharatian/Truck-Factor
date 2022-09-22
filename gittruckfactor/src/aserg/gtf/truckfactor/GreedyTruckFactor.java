@@ -24,7 +24,7 @@ public class GreedyTruckFactor extends TruckFactor {
 	private TFInfo tfInfo = new TFInfo();
 	
 	@Override
-	public TFInfo getTruckFactor(Repository repository, int significanceIndex) {
+	public TFInfo getTruckFactor(Repository repository) {
 		Map<Developer, Set<File>> authorsMap = getFilesAuthorMap(repository);
 		//GREDDY TRUCK FACTOR ALGORITHM		
 		int repFilesSize = repository.getFiles().size();

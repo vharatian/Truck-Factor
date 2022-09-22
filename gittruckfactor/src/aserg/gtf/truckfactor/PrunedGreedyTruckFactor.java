@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import aserg.gtf.Significance.FileSignificance;
 import org.apache.log4j.Logger;
 
 import aserg.gtf.GitTruckFactor;
@@ -24,46 +23,31 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 
 	private TFInfo tfInfo = new TFInfo();
 	private float minPercentage;
-	
+
 	public PrunedGreedyTruckFactor(float minPercentage) {
-		this.minPercentage = minPercentage; 
+		this.minPercentage = minPercentage;
 	}
 
 	@Override
-	public TFInfo getTruckFactor(Repository repository, int significanceIndex) {
+	public TFInfo getTruckFactor(Repository repository) {
 		Map<Developer, Set<File>> authorsMap = getFilesAuthorMap(repository);
 		//GREDDY TRUCK FACTOR ALGORITHM
-
-		double totalSignificance = GetTotalSignificance(repository, significanceIndex);
+		int repFilesSize = repository.getFiles().size();
 		int factor = 0;
 		float coverage = 1;
 		int nFilesTop1Dev = getNumFilesTopDev(authorsMap);
 		while(authorsMap.size()>0){
-			coverage = getCoverage(totalSignificance, authorsMap, significanceIndex);
+			coverage = getCoverage(repFilesSize, authorsMap);
 			if (coverage<0.5)
-				break;			
-			removeTopAuthor(authorsMap);
+				break;
+			removeTopAuthor(repFilesSize, authorsMap);
 			factor++;
 		}
-		tfInfo.setCoverage(getCoverage(totalSignificance, authorsMap, significanceIndex));
+		tfInfo.setCoverage(getCoverage(repFilesSize, authorsMap));
 		tfInfo.setTf(factor);
-		tfInfo.setTotalFiles(repository.getFiles().size());
-		
+		tfInfo.setTotalFiles(repFilesSize);
+
 		return pruneTF(tfInfo);
-	}
-
-	private double GetTotalSignificance(Repository repository, int significanceIndex) {
-		double sum = 0;
-		for (File file: repository.getFiles())
-		{
-			FileSignificance significance = file.getSignificance();
-			// Null significance means the file is not important
-			if (significance != null) {
-				sum += significance.indicators[significanceIndex].indicator;
-			}
-		}
-
-		return sum;
 	}
 
 	private TFInfo pruneTF(TFInfo tfInfo) {
@@ -108,8 +92,8 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 			List<AuthorshipInfo> authorships = developer.getAuthorshipInfos();
 			for (AuthorshipInfo authorshipInfo : authorships) {
 				if (authorshipInfo.isDOAAuthor())
-					devFiles.add(authorshipInfo.getFile());		
-				
+					devFiles.add(authorshipInfo.getFile());
+
 			}
 			if (devFiles.size()>0)
 				map.put(developer, devFiles);
@@ -117,27 +101,19 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 		return map;
 	}
 
-	private float getCoverage(double totalSignificance, Map<Developer, Set<File>> authorsMap, int significanceIndex) {
+	private float getCoverage(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
 		Set<File> authorsSet = new HashSet<File>();
-		double significanceSum = 0;
 		for (Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
 			for (File file : entry.getValue()) {
-				if (!authorsSet.contains(file))
-				{
-					authorsSet.add(file);
-					
-					FileSignificance significance = file.getSignificance();
-					// null significance means the file is not important at all
-					if (significance != null){
-						significanceSum += significance.indicators[significanceIndex].indicator;
-					}
-				}
+				authorsSet.add(file);
+				if(authorsSet.size()==repFilesSize)
+					return 1f;
 			}
 		}
-		return (float) (significanceSum / totalSignificance);
+		return (float)authorsSet.size()/repFilesSize;
 	}
 
-	private void removeTopAuthor(Map<Developer, Set<File>> authorsMap) {
+	private void removeTopAuthor(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
 		int biggerNumber = 0;
 		Developer biggerDev = null;
 		for (Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
@@ -148,16 +124,16 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 			if (biggerDev!=null && entry.getValue().size()==biggerNumber)
 				if(entry.getKey().getDevChanges() > biggerDev.getDevChanges())
 					biggerDev = entry.getKey();
-			
-			
+
+
 		}
 		tfInfo.addDeveloper(biggerDev);
-		authorsMap.remove(biggerDev);		
+		authorsMap.remove(biggerDev);
 	}
 
-	
+
 //	//HELP METHODS:  Used only for tests propose 
-	
+
 //	private void printAuthorsFile(Set<File> set) {
 //		for (File file : set) {
 //			System.out.println(file.getPath());
@@ -187,5 +163,5 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 //			System.out.println(tfInfo);
 //		}
 //	}
-	
+
 }
