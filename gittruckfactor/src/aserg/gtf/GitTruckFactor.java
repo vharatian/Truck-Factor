@@ -9,7 +9,9 @@ import java.util.Map.Entry;
 
 import aserg.gtf.Significance.FileSignificanceLoader;
 import aserg.gtf.Significance.SignificanceGreedyTruckFactor;
+import aserg.gtf.truckfactor.GreedyTruckFactor;
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
 
 import aserg.gtf.model.LogCommitInfo;

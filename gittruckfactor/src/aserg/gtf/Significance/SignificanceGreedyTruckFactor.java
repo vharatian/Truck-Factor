@@ -14,7 +14,7 @@ public class SignificanceGreedyTruckFactor extends TruckFactor {
     private static final Logger LOGGER = Logger.getLogger(TruckFactor.class);
     private final int significanceIndex;
 
-    private TFInfo tfInfo = new TFInfo();
+    private SignificanceTFInfo tfInfo = new SignificanceTFInfo();
     private float minPercentage;
 
     public SignificanceGreedyTruckFactor(float minPercentage, int significanceIndex) {
@@ -24,21 +24,20 @@ public class SignificanceGreedyTruckFactor extends TruckFactor {
 
     @Override
     public TFInfo getTruckFactor(Repository repository) {
-        Map<Developer, Set<File>> authorsMap = getFilesAuthorMap(repository);
         //GREDDY TRUCK FACTOR ALGORITHM
 
         double totalSignificance = GetTotalSignificance(repository, significanceIndex);
+        List<TotalAuthorshipInfo> authorshipInfos = getAuthorshipInfo(repository, significanceIndex, totalSignificance);
         int factor = 0;
         float coverage = 1;
-        int nFilesTop1Dev = getNumFilesTopDev(authorsMap);
-        while(authorsMap.size()>0){
-            coverage = getCoverage(totalSignificance, authorsMap, significanceIndex);
+        while(authorshipInfos.size()>0){
+            coverage = getCoverage(totalSignificance, authorshipInfos, significanceIndex);
             if (coverage<0.5)
                 break;
-            removeTopAuthor(authorsMap);
+            removeTopAuthor(authorshipInfos);
             factor++;
         }
-        tfInfo.setCoverage(getCoverage(totalSignificance, authorsMap, significanceIndex));
+        tfInfo.setCoverage(getCoverage(totalSignificance, authorshipInfos, significanceIndex));
         tfInfo.setTf(factor);
         tfInfo.setTotalFiles(repository.getFiles().size());
 
@@ -84,37 +83,44 @@ public class SignificanceGreedyTruckFactor extends TruckFactor {
         return topDev;
     }
 
-    private int getNumFilesTopDev(Map<Developer, Set<File>> authorsMap) {
-        int maxFiles = 0;
-        for (Set<File> files : authorsMap.values()) {
-            if (files.size()>maxFiles)
-                maxFiles = files.size();
-        }
-        return maxFiles;
-    }
-
-    private Map<Developer, Set<File>> getFilesAuthorMap(Repository repository){
-        Map<Developer, Set<File>> map = new HashMap<Developer, Set<File>>();
+    private List<TotalAuthorshipInfo> getAuthorshipInfo(Repository repository, int significanceIndex, double totalSignificance){
+        List<TotalAuthorshipInfo> results = new ArrayList<>();
         List<Developer> developers = repository.getDevelopers();
         for (Developer developer : developers) {
-            Set<File> devFiles = new HashSet<File>();
-            List<AuthorshipInfo> authorships = developer.getAuthorshipInfos();
-            for (AuthorshipInfo authorshipInfo : authorships) {
-                if (authorshipInfo.isDOAAuthor())
-                    devFiles.add(authorshipInfo.getFile());
-
+            TotalAuthorshipInfo info = getDeveloperAuthorshipInfo(significanceIndex, totalSignificance, developer);
+            if (info != null) {
+                results.add(info);
             }
-            if (devFiles.size()>0)
-                map.put(developer, devFiles);
         }
-        return map;
+
+        return results;
     }
 
-    private float getCoverage(double totalSignificance, Map<Developer, Set<File>> authorsMap, int significanceIndex) {
+    private static TotalAuthorshipInfo getDeveloperAuthorshipInfo(int significanceIndex, double totalSignificance, Developer developer) {
+        double significanceSum = 0;
+        Set<File> devFiles = new HashSet<>();
+        for (AuthorshipInfo authorshipInfo : developer.getAuthorshipInfos()) {
+            if (authorshipInfo.isDOAAuthor()) {
+                File file = authorshipInfo.getFile();
+                if (file.getSignificance() != null) {
+                    significanceSum += file.getSignificance().indicators[significanceIndex].indicator;
+                    devFiles.add(file);
+                }
+            }
+        }
+
+        if (significanceSum<=0) {
+            return null;
+        }
+
+        return new TotalAuthorshipInfo(significanceSum/totalSignificance, devFiles, developer);
+    }
+
+    private float getCoverage(double totalSignificance, List<TotalAuthorshipInfo> authorshipInfos, int significanceIndex) {
         Set<File> authorsSet = new HashSet<File>();
         double significanceSum = 0;
-        for (Map.Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
-            for (File file : entry.getValue()) {
+        for (TotalAuthorshipInfo info : authorshipInfos) {
+            for (File file : info.getFiles()) {
                 if (!authorsSet.contains(file))
                 {
                     authorsSet.add(file);
@@ -130,22 +136,22 @@ public class SignificanceGreedyTruckFactor extends TruckFactor {
         return (float) (significanceSum / totalSignificance);
     }
 
-    private void removeTopAuthor(Map<Developer, Set<File>> authorsMap) {
-        int biggerNumber = 0;
-        Developer biggerDev = null;
-        for (Map.Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
-            if (entry.getValue().size()>biggerNumber){
-                biggerNumber = entry.getValue().size();
-                biggerDev = entry.getKey();
+    private void removeTopAuthor(List<TotalAuthorshipInfo> infos) {
+        double biggerNumber = 0;
+        TotalAuthorshipInfo targetDeveloper = null;
+        for (TotalAuthorshipInfo info : infos) {
+            if (info.getCoverage()>biggerNumber){
+                biggerNumber = info.getCoverage();
+                targetDeveloper = info;
             }
-            if (biggerDev!=null && entry.getValue().size()==biggerNumber)
-                if(entry.getKey().getDevChanges() > biggerDev.getDevChanges())
-                    biggerDev = entry.getKey();
+            if (targetDeveloper!=null && info.getCoverage() == biggerNumber)
+                if(info.getDeveloper().getDevChanges() > targetDeveloper.getDeveloper().getDevChanges())
+                    targetDeveloper = info;
 
 
         }
-        tfInfo.addDeveloper(biggerDev);
-        authorsMap.remove(biggerDev);
+        tfInfo.addAuthorshipInfo(targetDeveloper);
+        infos.remove(targetDeveloper);
     }
 
 

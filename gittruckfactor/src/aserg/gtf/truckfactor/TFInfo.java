@@ -28,7 +28,7 @@ public class TFInfo {
 	public void addDeveloper(Developer dev){
 		tfDevelopers.add(dev);
 	}
-	
+
 	public int getTf() {
 		return tf;
 	}
@@ -38,6 +38,7 @@ public class TFInfo {
 	public float getCoverage() {
 		return coverage;
 	}
+
 	public List<Developer> getTfDevelopers() {
 		return tfDevelopers;
 	}
