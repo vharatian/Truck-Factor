@@ -1,9 +1,6 @@
 package aserg.gtf.task.extractor;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -70,6 +67,7 @@ public class LinguistExtractor extends AbstractTask<List<NewFileInfo>>{
 				} else {
 					file.setFiltered(true);
 					file.setFilterInfo("NOTLINGUIST");
+					System.out.println("*********** non lingual ************ " + file.getPath());
 				}
 			}
 		}
