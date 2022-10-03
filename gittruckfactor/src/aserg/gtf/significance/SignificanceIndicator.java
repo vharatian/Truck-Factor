@@ -1,4 +1,4 @@
-package aserg.gtf.Significance;
+package aserg.gtf.significance;
 
 public class SignificanceIndicator {
     public String name;

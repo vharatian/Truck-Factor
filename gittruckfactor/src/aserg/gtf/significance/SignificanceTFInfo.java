@@ -1,4 +1,4 @@
-package aserg.gtf.Significance;
+package aserg.gtf.significance;
 import aserg.gtf.truckfactor.TFInfo;
 
 import java.util.ArrayList;
@@ -24,9 +24,11 @@ public class SignificanceTFInfo extends TFInfo {
     public String toString() {
         String retStr = String.format("Significance = %s TF = %d (coverage = %.2f%%)\n", getSignificanceIndicator(), getTf(), getCoverage()*100);
         retStr += "TF authors (Developer;Files;Percentage):\n";
-        for (TotalAuthorshipInfo info : getAuthorshipInfos()) {
-            int devFiles = info.getNumberOfFile();
-            retStr += String.format("%s;%d;%.2f\n",info.getDeveloper().getName(),devFiles,info.getCoverage()*100);
+        if(getTf() > 0) {
+            for (TotalAuthorshipInfo info : getAuthorshipInfos()) {
+                int devFiles = info.getNumberOfFile();
+                retStr += String.format("%s;%d;%.2f\n", info.getDeveloper().getName(), devFiles, info.getCoverage() * 100);
+            }
         }
         return retStr;
     }

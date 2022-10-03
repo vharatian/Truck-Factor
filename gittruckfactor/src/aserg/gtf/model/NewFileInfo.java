@@ -9,7 +9,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import aserg.gtf.Significance.FileSignificance;
 import org.eclipse.persistence.annotations.Index;
 
 @Entity

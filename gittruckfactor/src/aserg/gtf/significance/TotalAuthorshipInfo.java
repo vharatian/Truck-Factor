@@ -1,4 +1,4 @@
-package aserg.gtf.Significance;
+package aserg.gtf.significance;
 
 import aserg.gtf.model.authorship.Developer;
 import aserg.gtf.model.authorship.File;

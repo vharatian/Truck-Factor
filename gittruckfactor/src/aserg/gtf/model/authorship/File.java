@@ -1,6 +1,6 @@
 package aserg.gtf.model.authorship;
 
-import aserg.gtf.Significance.FileSignificance;
+import aserg.gtf.significance.FileSignificance;
 
 import java.util.ArrayList;
 import java.util.List;
