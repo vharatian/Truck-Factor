@@ -67,7 +67,7 @@ public class LinguistExtractor extends AbstractTask<List<NewFileInfo>>{
 				} else {
 					file.setFiltered(true);
 					file.setFilterInfo("NOTLINGUIST");
-					System.out.println("*********** non lingual ************ " + file.getPath());
+//					System.out.println("*********** non lingual ************ " + file.getPath());
 				}
 			}
 		}

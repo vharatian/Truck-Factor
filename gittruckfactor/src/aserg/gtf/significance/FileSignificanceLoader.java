@@ -12,9 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FileSignificanceLoader {
-    public static final String INDICATOR_EQUAL = "Equal";
+    public static final String INDICATOR_EQUAL = "AvelinoWithOnlyJavaFile";
     private final String significanceFilePath;
-
     public FileSignificanceLoader(String significanceFilePath) {
         this.significanceFilePath = significanceFilePath;
     }

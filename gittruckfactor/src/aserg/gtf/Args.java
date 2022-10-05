@@ -9,27 +9,30 @@ public class Args {
         String repositoryPath = args[0];
         String significanceFile = args[1];
         String targetPathFile = args[2];
+        String outputPath = args[3];
         String repositoryName = "";
-        if (args.length > 3)
-            repositoryName = args[3];
+        if (args.length > 4)
+            repositoryName = args[4];
 
         repositoryPath = (repositoryPath.charAt(repositoryPath.length() - 1) == '/') ? repositoryPath : (repositoryPath + "/");
         if (repositoryName.isEmpty())
             repositoryName = repositoryPath.split("/")[repositoryPath.split("/").length - 1];
 
-        return new Args(repositoryPath, significanceFile, repositoryName, targetPathFile);
+        return new Args(repositoryPath, significanceFile, repositoryName, targetPathFile, outputPath);
     }
 
     private String repositoryPath;
     private String significanceFile;
     private String repositoryName;
     private String targetPathFile;
+    private String outputPath;
 
-    private Args(String repositoryPath, String significanceFile, String repositoryName, String targetPathFile) {
+    private Args(String repositoryPath, String significanceFile, String repositoryName, String targetPathFile, String outputPath) {
         this.repositoryPath = repositoryPath;
         this.significanceFile = significanceFile;
         this.repositoryName = repositoryName;
         this.targetPathFile = targetPathFile;
+        this.outputPath = outputPath;
     }
 
     public String getRepositoryPath() {
@@ -46,5 +49,9 @@ public class Args {
 
     public String getTargetPathFile() {
         return targetPathFile;
+    }
+
+    public String getOutputPath() {
+        return outputPath;
     }
 }
