@@ -73,7 +73,7 @@ public class GitTruckFactor {
 
         FileInfoExtractor fileExtractor = new FileInfoExtractor(args.getRepositoryPath(), args.getRepositoryName());
         LinguistExtractor linguistExtractor = new LinguistExtractor(args.getRepositoryPath(), args.getRepositoryName());
-        NewAliasHandler aliasHandler = aliasInfo == null ? null : new NewAliasHandler(aliasInfo.get(args.getRepositoryName()));
+        NewAliasHandler aliasHandler = aliasInfo == null ? null : new NewAliasHandler(aliasInfo.get(""));
         GitLogExtractor gitLogExtractor = new GitLogExtractor(args.getRepositoryPath(), args.getRepositoryName());
 
         FileSignificanceLoader fileSignificanceLoader = new FileSignificanceLoader(args.getSignificanceFile());
@@ -90,6 +90,7 @@ public class GitTruckFactor {
                 LOGGER.info("\n" + tf);
             }
             new TargetInformationExporter().export(tfs, args.getOutputPath());
+
         } catch (Exception e) {
             LOGGER.error("TF calculation aborted!", e);
         }
@@ -140,6 +141,7 @@ public class GitTruckFactor {
             List<TFInfo> tfResults = calculateTfInfo(repository);
             results.add(new TargetTFInfo(targetPath, tfResults));
         }
+
 
         return results;
 

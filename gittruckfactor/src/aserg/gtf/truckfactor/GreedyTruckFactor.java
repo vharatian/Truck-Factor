@@ -59,21 +59,21 @@ public class GreedyTruckFactor extends TruckFactor {
 	}
 
 	private float getCoverage(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
-//		Set<File> authorsSet = new HashSet<File>();
-		double significanceSum = 0;
+		Set<File> authorsSet = new HashSet<File>();
+//		double significanceSum = 0;
 		for (Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
 			for (File file : entry.getValue()) {
-//				authorsSet.add(file);
-//				if(authorsSet.size()==repFilesSize)
-//					return 1f;
-				FileSignificance significance = file.getSignificance();
-				if (significance != null){
-					significanceSum += significance.indicators[0].indicator;
-				}
+				authorsSet.add(file);
+				if(authorsSet.size()==repFilesSize)
+					return 1f;
+//				FileSignificance significance = file.getSignificance();
+//				if (significance != null){
+//					significanceSum += significance.indicators[0].indicator;
+//				}
 			}
 		}
-//		return (float)authorsSet.size()/repFilesSize;
-		return (float) significanceSum;
+		return (float)authorsSet.size()/repFilesSize;
+//		return (float) significanceSum;
 	}
 
 	private void removeTopAuthor(int repFilesSize, Map<Developer, Set<File>> authorsMap) {

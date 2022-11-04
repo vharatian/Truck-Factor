@@ -70,6 +70,10 @@ public class NewAliasHandler{
 			String rep = info.getRepositoryName();
 			String dev1 = info.getValues().get(0);
 			String dev2 = info.getValues().get(1);
+			if (dev1.equals(dev2)){
+				continue;
+			}
+
 			String usernameDev1 = devNameMap.get(dev1.toUpperCase()).get(0).getUserName();
 			String usernameDev2 = devNameMap.get(dev2.toUpperCase()).get(0).getUserName();
 			
@@ -77,17 +81,17 @@ public class NewAliasHandler{
 			
 			
 			for (LogCommitInfo commit : devUsernameMap.get(usernameDev1)) {
-				if (!commit.getUserName().equals(usernameDev2)){
+//				if (!commit.getUserName().equals(usernameDev2)){
 					setNewUsername(commit, newUsername);
 					//commit.setUserName(newUsername);					
-				}
+//				}
 				
 			}
 			for (LogCommitInfo commit : devUsernameMap.get(usernameDev2)) {
-				if (!commit.getUserName().equals(usernameDev1)){
+//				if (!commit.getUserName().equals(usernameDev1)){
 					setNewUsername(commit, newUsername);
 					//commit.setUserName(newUsername);					
-				}
+//				}
 				
 			}
 			

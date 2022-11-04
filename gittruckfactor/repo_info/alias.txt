@@ -1,2 +1,3 @@
-####### List of user name aliases #######
-#git_repository_name;user_name;user_alias_name
+;Vladimir Kovalenko;Vladimir Kovalenko
+;cyr;cyr
+;vharatian;vharatian
