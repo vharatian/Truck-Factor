@@ -9,8 +9,8 @@ import java.util.Map.Entry;
 
 import aserg.gtf.significance.FileSignificanceLoader;
 import aserg.gtf.significance.SignificanceGreedyTruckFactor;
+import aserg.gtf.target.OutputExporter;
 import aserg.gtf.target.TargetDirectoryLoader;
-import aserg.gtf.target.TargetInformationExporter;
 import aserg.gtf.target.TargetTFInfo;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -89,7 +89,10 @@ public class GitTruckFactor {
             for (TargetTFInfo tf: tfs){
                 LOGGER.info("\n" + tf);
             }
-            new TargetInformationExporter().export(tfs, args.getOutputPath());
+
+            new OutputExporter().ExportOutput(tfs, args.getOutputPath());
+//            new Gson().toJson(tfs, new FileWriter(args.getOutputPath()));
+//            new TargetInformationExporter().export(tfs, args.getOutputPath());
 
         } catch (Exception e) {
             LOGGER.error("TF calculation aborted!", e);

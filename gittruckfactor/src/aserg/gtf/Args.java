@@ -4,7 +4,7 @@ public class Args {
 
     public static Args parse(String[] args){
         if (args.length < 3)
-            throw new IllegalArgumentException("You should enter <repository path> <significance file path> <targetPathFile>");
+            throw new IllegalArgumentException("You should enter <repository path> <significance file path> <targetPathFile> <outputpath>");
 
         String repositoryPath = args[0];
         String significanceFile = args[1];

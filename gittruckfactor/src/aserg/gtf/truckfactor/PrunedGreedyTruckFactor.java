@@ -102,6 +102,10 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 	}
 
 	private float getCoverage(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
+		if (repFilesSize == 0){
+			return 0;
+		}
+
 		Set<File> authorsSet = new HashSet<File>();
 		for (Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
 			for (File file : entry.getValue()) {

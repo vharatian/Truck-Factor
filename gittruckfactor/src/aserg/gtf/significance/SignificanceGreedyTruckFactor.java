@@ -117,6 +117,10 @@ public class SignificanceGreedyTruckFactor extends TruckFactor {
     }
 
     private float getCoverage(double totalSignificance, List<TotalAuthorshipInfo> authorshipInfos, int significanceIndex) {
+        if (totalSignificance == 0){
+            return 0;
+        }
+
         Set<File> authorsSet = new HashSet<File>();
         double significanceSum = 0;
         for (TotalAuthorshipInfo info : authorshipInfos) {
