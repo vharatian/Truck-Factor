@@ -28,15 +28,15 @@ public class OutputExporter {
                     if (significanceTFInfo.authorshipInfos != null) {
                         for (TotalAuthorshipInfo authorshipInfo : significanceTFInfo.authorshipInfos) {
                             developers.add(new OutputDeveloper(authorshipInfo.getDeveloper().getName(),
-                                    authorshipInfo.getDeveloper().getEmail(), authorshipInfo.getNumberOfFile(), 0,
-                                    authorshipInfo.getCoverage(), 0.0));
+                                    authorshipInfo.getDeveloper().getEmail(), 0, authorshipInfo.getNumberOfFile(),
+                                    0.0, authorshipInfo.getCoverage()));
                         }
                     }
                 } else {
                     for (Developer developer : tfInfo.getTfDevelopers()) {
                         int devFiles = developer.getAuthorshipFiles().size();
                         developers.add(new OutputDeveloper(developer.getName(), developer.getEmail(),
-                                devFiles, 0, (devFiles * 1.0) / tfInfo.getTotalFiles(), 0.0));
+                                0, devFiles, 0.0, (devFiles * 1.0) / tfInfo.getTotalFiles()));
                     }
                 }
 
