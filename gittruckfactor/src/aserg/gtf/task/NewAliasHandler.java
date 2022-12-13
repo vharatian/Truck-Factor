@@ -74,8 +74,15 @@ public class NewAliasHandler{
 				continue;
 			}
 
-			String usernameDev1 = devNameMap.get(dev1.toUpperCase()).get(0).getUserName();
-			String usernameDev2 = devNameMap.get(dev2.toUpperCase()).get(0).getUserName();
+			List<LogCommitInfo> dev1logCommitInfos = devNameMap.get(dev1.toUpperCase());
+			List<LogCommitInfo> dev2logCommitInfos = devNameMap.get(dev2.toUpperCase());
+
+			if (dev1logCommitInfos == null || dev1logCommitInfos.isEmpty() || dev2logCommitInfos == null || dev2logCommitInfos.isEmpty()){
+				continue;
+			}
+
+			String usernameDev1 = dev1logCommitInfos.get(0).getUserName();
+			String usernameDev2 = dev2logCommitInfos.get(0).getUserName();
 			
 			String newUsername = usernameDev1.contains(usernameDev2)?usernameDev1: (usernameDev2.contains(usernameDev1)?usernameDev2:usernameDev1+"$$"+usernameDev2);
 			
