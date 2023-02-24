@@ -47,7 +47,8 @@ public class Repository {
 
 	@Enumerated(EnumType.STRING)
 	private RepositoryStatus status;
-	
+	private String[] significanceIndicators;
+
 	public Repository() {
 	}
 	public Repository(String fullName) {
@@ -141,9 +142,13 @@ public class Repository {
 	public void setStatus(RepositoryStatus status) {
 		this.status = status;
 	}
-	
 
-	
-	
-	
+
+	public void setSignificanceIndicators(String[] significanceIndicators) {
+		this.significanceIndicators = significanceIndicators;
+	}
+
+	public String[] getSignificanceIndicators() {
+		return significanceIndicators;
+	}
 }

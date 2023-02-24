@@ -4,18 +4,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
 
-import aserg.gtf.Significance.FileSignificanceLoader;
+import aserg.gtf.significance.FileSignificanceLoader;
+import aserg.gtf.significance.SignificanceGreedyTruckFactor;
+import aserg.gtf.target.OutputExporter;
+import aserg.gtf.target.TargetDirectoryLoader;
+import aserg.gtf.target.TargetTFInfo;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
@@ -42,26 +38,14 @@ public class GitTruckFactor {
     private static InputStream input = null;
     public static ConfigInfo config = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] stringArgs) {
         BasicConfigurator.configure();
         LOGGER = Logger.getLogger(GitTruckFactor.class);
         LOGGER.trace("GitTruckFactor starts");
 
         loadConfiguration();
 
-        String repositoryPath = "";
-        String repositoryName = "";
-        String significanceFile = "";
-        if (args.length > 0)
-            repositoryPath = args[0];
-        if (args.length > 1)
-            repositoryName = args[1];
-        if (args.length > 2)
-            significanceFile = args[2];
-
-        repositoryPath = (repositoryPath.charAt(repositoryPath.length() - 1) == '/') ? repositoryPath : (repositoryPath + "/");
-        if (repositoryName.isEmpty())
-            repositoryName = repositoryPath.split("/")[repositoryPath.split("/").length - 1];
+        Args args = Args.parse(stringArgs);
 
 
         Map<String, List<LineInfo>> filesInfo;
@@ -87,20 +71,29 @@ public class GitTruckFactor {
         }
 
 
-        FileInfoExtractor fileExtractor = new FileInfoExtractor(repositoryPath, repositoryName);
-        LinguistExtractor linguistExtractor = new LinguistExtractor(repositoryPath, repositoryName);
-        NewAliasHandler aliasHandler = aliasInfo == null ? null : new NewAliasHandler(aliasInfo.get(repositoryName));
-        GitLogExtractor gitLogExtractor = new GitLogExtractor(repositoryPath, repositoryName);
+        FileInfoExtractor fileExtractor = new FileInfoExtractor(args.getRepositoryPath(), args.getRepositoryName());
+        LinguistExtractor linguistExtractor = new LinguistExtractor(args.getRepositoryPath(), args.getRepositoryName());
+        NewAliasHandler aliasHandler = aliasInfo == null ? null : new NewAliasHandler(aliasInfo.get(""));
+        GitLogExtractor gitLogExtractor = new GitLogExtractor(args.getRepositoryPath(), args.getRepositoryName());
 
-        FileSignificanceLoader fileSignificanceLoader = new FileSignificanceLoader(significanceFile);
+        FileSignificanceLoader fileSignificanceLoader = new FileSignificanceLoader(args.getSignificanceFile());
+        TargetDirectoryLoader targetDirectoryLoader = new TargetDirectoryLoader(args.getTargetPathFile());
+
 
         //Persist commit info
         //gitLogExtractor.persist(commits);
 
 
         try {
-            TFInfo tf = getTFInfo(repositoryPath, repositoryName, filesInfo, modulesInfo, fileExtractor, linguistExtractor, gitLogExtractor, aliasHandler, fileSignificanceLoader);
-            System.out.println(tf);
+            List<TargetTFInfo> tfs = getTFInfo(args.getRepositoryPath(), args.getRepositoryName(), filesInfo, modulesInfo, fileExtractor, linguistExtractor, gitLogExtractor, aliasHandler, fileSignificanceLoader, targetDirectoryLoader);
+            for (TargetTFInfo tf: tfs){
+                LOGGER.info("\n" + tf);
+            }
+
+            new OutputExporter().ExportOutput(tfs, args.getOutputPath());
+//            new Gson().toJson(tfs, new FileWriter(args.getOutputPath()));
+//            new TargetInformationExporter().export(tfs, args.getOutputPath());
+
         } catch (Exception e) {
             LOGGER.error("TF calculation aborted!", e);
         }
@@ -109,46 +102,86 @@ public class GitTruckFactor {
         LOGGER.trace("GitTruckFactor end");
     }
 
-    private static TFInfo getTFInfo(String repositoryPath,
-                                    String repositoryName,
-                                    Map<String, List<LineInfo>> filesInfo,
-                                    Map<String, List<LineInfo>> modulesInfo,
-                                    FileInfoExtractor fileExtractor,
-                                    LinguistExtractor linguistExtractor,
-                                    GitLogExtractor gitLogExtractor,
-                                    NewAliasHandler aliasHandler,
-                                    FileSignificanceLoader fileSignificanceLoader) throws Exception {
+    private static List<TargetTFInfo> getTFInfo(String repositoryPath,
+                                                String repositoryName,
+                                                Map<String, List<LineInfo>> filesInfo,
+                                                Map<String, List<LineInfo>> modulesInfo,
+                                                FileInfoExtractor fileExtractor,
+                                                LinguistExtractor linguistExtractor,
+                                                GitLogExtractor gitLogExtractor,
+                                                NewAliasHandler aliasHandler,
+                                                FileSignificanceLoader fileSignificanceLoader,
+                                                TargetDirectoryLoader targetDirectoryLoader) throws Exception {
 
         Map<String, LogCommitInfo> commits = gitLogExtractor.execute();
         if (aliasHandler != null)
             commits = aliasHandler.execute(repositoryName, commits);
 
-        List<NewFileInfo> files = fileExtractor.execute();
-        files = linguistExtractor.setNotLinguist(files);
-        if (filesInfo != null && filesInfo.size() > 0)
-            if (filesInfo.containsKey(repositoryName))
-                applyFilterFiles(filesInfo.get(repositoryName), files);
-            else
-                LOGGER.warn("No filesInfo for " + repositoryName);
 
-        if (modulesInfo != null && modulesInfo.containsKey(repositoryName))
-            setModules(modulesInfo.get(repositoryName), files);
+        List<TargetTFInfo> results = new ArrayList<>();
+        for (String targetPath :  targetDirectoryLoader.readTargetDirectories()) {
+            List<NewFileInfo> files = fileExtractor.execute();
+            files = linguistExtractor.setNotLinguist(files);
+            if (filesInfo != null && filesInfo.size() > 0) {
+                if (filesInfo.containsKey(repositoryName)) {
+                    applyFilterFiles(filesInfo.get(repositoryName), files);
+                } else {
+                    LOGGER.warn("No filesInfo for " + repositoryName);
+                }
+            }
 
-        //Persist file info
-        //fileExtractor.persist(files);
+            applyTargetPath(targetPath, files);
 
-        DOACalculator doaCalculator = new DOACalculator(repositoryPath, repositoryName, commits.values(), files);
-        Repository repository = doaCalculator.execute();
+            if (modulesInfo != null && modulesInfo.containsKey(repositoryName))
+                setModules(modulesInfo.get(repositoryName), files);
 
-        repository = fileSignificanceLoader.AddInfo(repository);
+            DOACalculator doaCalculator = new DOACalculator(repositoryPath, repositoryName, commits.values(), files);
+            Repository repository = doaCalculator.execute();
 
-        //printFileAuthors(repository);
-        //Persist authors info
-        //doaCalculator.persist(repository);
+            repository = fileSignificanceLoader.AddInfo(repository);
 
-        TruckFactor truckFactor = new PrunedGreedyTruckFactor(config.getMinPercentage());
-        return truckFactor.getTruckFactor(repository);
+            // get TF result for all indicators
+            List<TFInfo> tfResults = calculateTfInfo(repository);
+            results.add(new TargetTFInfo(targetPath, tfResults));
+        }
 
+
+        return results;
+
+    }
+
+    private static List<TFInfo> calculateTfInfo(Repository repository){
+        List<TFInfo> results = new ArrayList<>();
+
+        // Add the vanilla TF evaluation result
+        try {
+            TruckFactor truckFactor = new PrunedGreedyTruckFactor(config.getMinPercentage());
+            TFInfo info = truckFactor.getTruckFactor(repository);
+            info.setSignificanceIndicator("Avelino");
+            results.add(info);
+        } catch (Exception e) {
+            LOGGER.error("TF calculation aborted for vanilla TF Calculation", e);
+        }
+
+
+        String[] significanceIndicators = repository.getSignificanceIndicators();
+        for (int i = 0; i< significanceIndicators.length; i++){
+            String significanceIndicator = significanceIndicators[i];
+            try{
+                TruckFactor truckFactor = new SignificanceGreedyTruckFactor(config.getMinPercentage(), i);
+                TFInfo info = truckFactor.getTruckFactor(repository);
+                info.setSignificanceIndicator(significanceIndicator);
+                results.add(info);
+            }catch (Exception e){
+                LOGGER.error("TF calculation aborted for indicator " + significanceIndicator, e);
+            }
+        }
+
+        return results;
+    }
+
+    private static void applyTargetPath(String targetPath, List<NewFileInfo> files) {
+        applyRegexFilter(files, "^(?!" + targetPath +").+");
     }
 
     public static void loadConfiguration() {
@@ -286,7 +319,6 @@ public class GitTruckFactor {
                         newFileInfo.setFiltered(true);
                         newFileInfo.setFilterInfo(lineInfo.getValues().get(1));
                     }
-
                 }
             }
         }

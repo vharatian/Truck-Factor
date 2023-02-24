@@ -1,6 +1,5 @@
-package aserg.gtf.Significance;
+package aserg.gtf.significance;
 
-import java.util.List;
 import java.util.Map;
 
 public class SignificanceInfo {

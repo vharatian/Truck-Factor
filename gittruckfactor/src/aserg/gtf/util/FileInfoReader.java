@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.io.LineReader;
+import org.apache.commons.lang3.StringUtils;
 
 public class FileInfoReader {
 			
@@ -23,6 +24,7 @@ public class FileInfoReader {
 		while ((sCurrentLine = lineReader.readLine()) != null) {
 			if (sCurrentLine.startsWith("#"))
 				continue;
+			sCurrentLine = StringUtils.stripAccents(sCurrentLine);
 			values = sCurrentLine.split(";");
 			if (values.length<3)
 				System.err.println("Erro na linha " + countcfs);

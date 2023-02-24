@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import aserg.gtf.Significance.FileSignificance;
 import org.apache.log4j.Logger;
 
 import aserg.gtf.GitTruckFactor;
@@ -24,15 +23,15 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 
 	private TFInfo tfInfo = new TFInfo();
 	private float minPercentage;
-	
+
 	public PrunedGreedyTruckFactor(float minPercentage) {
-		this.minPercentage = minPercentage; 
+		this.minPercentage = minPercentage;
 	}
-	
+
 	@Override
 	public TFInfo getTruckFactor(Repository repository) {
 		Map<Developer, Set<File>> authorsMap = getFilesAuthorMap(repository);
-		//GREDDY TRUCK FACTOR ALGORITHM		
+		//GREDDY TRUCK FACTOR ALGORITHM
 		int repFilesSize = repository.getFiles().size();
 		int factor = 0;
 		float coverage = 1;
@@ -40,17 +39,17 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 		while(authorsMap.size()>0){
 			coverage = getCoverage(repFilesSize, authorsMap);
 			if (coverage<0.5)
-				break;			
+				break;
 			removeTopAuthor(repFilesSize, authorsMap);
 			factor++;
 		}
 		tfInfo.setCoverage(getCoverage(repFilesSize, authorsMap));
 		tfInfo.setTf(factor);
 		tfInfo.setTotalFiles(repFilesSize);
-		
+
 		return pruneTF(tfInfo);
 	}
-	
+
 	private TFInfo pruneTF(TFInfo tfInfo) {
 		Developer topDev = getTopOneDev(tfInfo.getTfDevelopers());
 		List<Developer> prunedDevs = new ArrayList<Developer>();
@@ -93,8 +92,8 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 			List<AuthorshipInfo> authorships = developer.getAuthorshipInfos();
 			for (AuthorshipInfo authorshipInfo : authorships) {
 				if (authorshipInfo.isDOAAuthor())
-					devFiles.add(authorshipInfo.getFile());		
-				
+					devFiles.add(authorshipInfo.getFile());
+
 			}
 			if (devFiles.size()>0)
 				map.put(developer, devFiles);
@@ -103,21 +102,19 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 	}
 
 	private float getCoverage(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
-//		Set<File> authorsSet = new HashSet<File>();
-		double significanceSum = 0;
+		if (repFilesSize == 0){
+			return 0;
+		}
+
+		Set<File> authorsSet = new HashSet<File>();
 		for (Entry<Developer, Set<File>> entry : authorsMap.entrySet()) {
 			for (File file : entry.getValue()) {
-//				authorsSet.add(file);
-//				if(authorsSet.size()==repFilesSize)
-//					return 1f;
-
-				FileSignificance significance = file.getSignificance();
-				if (significance != null){
-					significanceSum += significance.indicators[0].indicator;
-				}
+				authorsSet.add(file);
+				if(authorsSet.size()==repFilesSize)
+					return 1f;
 			}
 		}
-		return (float) significanceSum;
+		return (float)authorsSet.size()/repFilesSize;
 	}
 
 	private void removeTopAuthor(int repFilesSize, Map<Developer, Set<File>> authorsMap) {
@@ -131,16 +128,16 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 			if (biggerDev!=null && entry.getValue().size()==biggerNumber)
 				if(entry.getKey().getDevChanges() > biggerDev.getDevChanges())
 					biggerDev = entry.getKey();
-			
-			
+
+
 		}
 		tfInfo.addDeveloper(biggerDev);
-		authorsMap.remove(biggerDev);		
+		authorsMap.remove(biggerDev);
 	}
 
-	
+
 //	//HELP METHODS:  Used only for tests propose 
-	
+
 //	private void printAuthorsFile(Set<File> set) {
 //		for (File file : set) {
 //			System.out.println(file.getPath());
@@ -170,5 +167,5 @@ public class PrunedGreedyTruckFactor extends TruckFactor {
 //			System.out.println(tfInfo);
 //		}
 //	}
-	
+
 }

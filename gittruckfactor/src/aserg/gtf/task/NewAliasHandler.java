@@ -70,24 +70,35 @@ public class NewAliasHandler{
 			String rep = info.getRepositoryName();
 			String dev1 = info.getValues().get(0);
 			String dev2 = info.getValues().get(1);
-			String usernameDev1 = devNameMap.get(dev1.toUpperCase()).get(0).getUserName();
-			String usernameDev2 = devNameMap.get(dev2.toUpperCase()).get(0).getUserName();
+			if (dev1.equals(dev2)){
+				continue;
+			}
+
+			List<LogCommitInfo> dev1logCommitInfos = devNameMap.get(dev1.toUpperCase());
+			List<LogCommitInfo> dev2logCommitInfos = devNameMap.get(dev2.toUpperCase());
+
+			if (dev1logCommitInfos == null || dev1logCommitInfos.isEmpty() || dev2logCommitInfos == null || dev2logCommitInfos.isEmpty()){
+				continue;
+			}
+
+			String usernameDev1 = dev1logCommitInfos.get(0).getUserName();
+			String usernameDev2 = dev2logCommitInfos.get(0).getUserName();
 			
 			String newUsername = usernameDev1.contains(usernameDev2)?usernameDev1: (usernameDev2.contains(usernameDev1)?usernameDev2:usernameDev1+"$$"+usernameDev2);
 			
 			
 			for (LogCommitInfo commit : devUsernameMap.get(usernameDev1)) {
-				if (!commit.getUserName().equals(usernameDev2)){
+//				if (!commit.getUserName().equals(usernameDev2)){
 					setNewUsername(commit, newUsername);
 					//commit.setUserName(newUsername);					
-				}
+//				}
 				
 			}
 			for (LogCommitInfo commit : devUsernameMap.get(usernameDev2)) {
-				if (!commit.getUserName().equals(usernameDev1)){
+//				if (!commit.getUserName().equals(usernameDev1)){
 					setNewUsername(commit, newUsername);
 					//commit.setUserName(newUsername);					
-				}
+//				}
 				
 			}
 			
